@@ -18,6 +18,7 @@
 
 package org.apache.flink.streaming.runtime.operators.sink.committables;
 
+import org.apache.flink.annotation.VisibleForTesting;
 import org.apache.flink.api.connector.sink2.Committer;
 import org.apache.flink.streaming.api.connector.sink2.CommittableSummary;
 import org.apache.flink.streaming.api.connector.sink2.CommittableWithLineage;
@@ -53,10 +54,12 @@ class CheckpointCommittableManagerImpl<CommT> implements CheckpointCommittableMa
 
     CheckpointCommittableManagerImpl(
             Map<Integer, SubtaskCommittableManager<CommT>> subtasksCommittableManagers,
+            int subtaskId,
+            int numberOfSubtasks,
             @Nullable Long checkpointId) {
         this.subtasksCommittableManagers = checkNotNull(subtasksCommittableManagers);
-        this.subtaskId = 0;
-        this.numberOfSubtasks = 1;
+        this.subtaskId = subtaskId;
+        this.numberOfSubtasks = numberOfSubtasks;
         this.checkpointId = checkpointId;
     }
 
@@ -158,6 +161,18 @@ class CheckpointCommittableManagerImpl<CommT> implements CheckpointCommittableMa
         return new CheckpointCommittableManagerImpl<>(
                 subtasksCommittableManagers.entrySet().stream()
                         .collect(Collectors.toMap(Map.Entry::getKey, (e) -> e.getValue().copy())),
+                subtaskId,
+                numberOfSubtasks,
                 checkpointId);
+    }
+
+    @VisibleForTesting
+    int getSubtaskId() {
+        return subtaskId;
+    }
+
+    @VisibleForTesting
+    int getNumberOfSubtasks() {
+        return numberOfSubtasks;
     }
 }
